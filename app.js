@@ -5,6 +5,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -31,12 +33,19 @@ connect.then(
 
 var app = express();
 //signed cookie
-app.use(cookieParser('12345-67890-09876-54321'));
+//app.use(cookieParser('12345-67890-09876-54321'));
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore()
+}));
 
 function auth (req, res, next) {
-  console.log(req.signedCookies);
+  console.log(req.session);
   //If the cookie with object user is not exists,
-  if(!req.signedCookies.user){
+  if(!req.session.user){
       //client needs to provide authHeader, respond "Basic" Authentication
     var authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -53,7 +62,7 @@ function auth (req, res, next) {
     var pass = auth[1];
     if (user == 'admin' && pass == 'password') {
       //setting 'user' with name 'admin' as the respond cookie
-      res.cookie('user', 'admin', {signed: true})
+      req.session.user = 'admin';
       next(); // authorized
     } else {
       var err = new Error('You are not authenticated!');
@@ -66,7 +75,7 @@ function auth (req, res, next) {
   //If the cookie already exists, then:
   else {
     //check if the user is 'admin' as set up earlier
-    if (req.signedCookies.user === 'admin'){
+    if (req.session.user === 'admin'){
       next();
     }
     else {

@@ -1,5 +1,8 @@
 var createError = require('http-errors');
 var express = require('express');
+var passport = require('passport');
+var authenticate = require('./authenticate');
+var config = require('./config');
 
 
 var path = require('path');
@@ -17,7 +20,7 @@ const leaderRouter = require('./routes/leaderRouter');
 const mongoose = require('mongoose');
 const Dishes = require('./models/dishes');
 
-const url = 'mongodb://localhost:27017/conFusion';
+const url = config.mongoUrl;
 const connect = mongoose.connect(url);
 
 connect.then( 
@@ -42,35 +45,30 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 //User can get to the homepage and users endpoint without have to authenticated, other endpoints need to get authenticated
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-function auth (req, res, next) {
-  console.log(req.session);
-  //If the cookie with object user is not exists,
-  if(!req.session.user){
+  //only use authentication in certain route
+  /*function auth (req, res, next) {
+    console.log(req.session);
+    //If the cookie with object user is not exists,
+    if(!req.user){
 
-      var err = new Error('You are not authenticated!');
-      err.status = 401;
-      return next(err);
- 
-  }  
-
-  else {
-    //check if the user is 'admin' as set up earlier
-    if (req.session.user === 'authenticated'){
+        var err = new Error('You are not authenticated!');
+        err.status = 403;
+        return next(err);
+    }  
+    else {
+      //the passport already done with authenticating, and can move on
       next();
     }
-    else {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      next(err);   
-    }
   }
-}
 
-app.use(auth);
-// view engine setup
+  app.use(auth);*/
+  // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 

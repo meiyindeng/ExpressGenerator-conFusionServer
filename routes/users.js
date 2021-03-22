@@ -4,12 +4,13 @@ var User = require('../models/user');
 var passport = require('passport');
 //const { authenticate } = require('passport');
 var authenticate = require('../authenticate');
+const cors = require('./cors');
 
 var router = express.Router();
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     User.find({})
     .then(
       (Users) =>
@@ -32,7 +33,7 @@ router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, (req, res, ne
 
 //User has 3 ends point: signup, login, and logout
 
-router.post('/signup', function(req, res, next)
+router.post('/signup', cors.corsWithOptions, function(req, res, next)
   {
   //check to make sure the username does not exist, 
   //you don't want to create duplicate user
@@ -79,7 +80,7 @@ router.post('/signup', function(req, res, next)
    
 
 
-router.post('/login', passport.authenticate('local'), (req, res) => 
+router.post('/login', cors.corsWithOptions, passport.authenticate('local'), (req, res) => 
   {
     //to create a token with the req.user._id
     var token = authenticate.getToken({_id: req.user._id, role: req.user.admin});
@@ -93,7 +94,7 @@ router.post('/login', passport.authenticate('local'), (req, res) =>
 
 //if the user request to log out
 
-router.get('/logout', (req, res) => {
+router.get('/logout', cors.corsWithOptions, (req, res) => {
   //check if the session exists
   if(req.session) {
     //destroy the session and remove information from the server side
@@ -107,4 +108,18 @@ router.get('/logout', (req, res) => {
     next(err);
   }
 });
+
+router.get('/facebook/token', passport.authenticate('facebook-token'), 
+  (req, res) => {
+    if(req.user){//the user has already authenticated and added to the req obj
+      //need to create a token 
+      var token = authenticate.getToken({_id: req.user._id, role: req.user.admin});
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.json({success: true, token: token, status: 'You are successfully login!'});
+    }
+
+  }
+)
+
 module.exports = router;

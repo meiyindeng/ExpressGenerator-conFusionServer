@@ -18,7 +18,8 @@ dishRouter.route('/')
 
 
 .get(cors.cors, (req, res, next) => {
-    Dishes.find({})
+    //Dishes.find({})
+    Dishes.find(req.query)
     .populate('comments.author')
     .then(
         (Dishes) =>

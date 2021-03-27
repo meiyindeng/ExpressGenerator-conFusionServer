@@ -17,7 +17,8 @@ leaderRouter.route('/')
 })*/
 
 .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-    Leaders.find({})
+    //Leaders.find({})
+    Leaders.find(req.query)
     .then(
         (leaders) =>
         {

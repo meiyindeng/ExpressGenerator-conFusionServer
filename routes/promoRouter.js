@@ -20,7 +20,8 @@ promoRouter.route('/')
 })*/
 
 .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-    Promotions.find({})
+    //Promotions.find({})
+    Promotions.find(req.query)
     .then(
         (promotions) => 
         {
